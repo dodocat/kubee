@@ -37,32 +37,33 @@ func main() {
 		}
 
 		for _, deployment := range deploymentList.Items {
+			//replica := deployment.Spec.Replicas
+			item := make([]string, 0)
+			item = append(item, namespace.Name)
+			item = append(item, deployment.Name)
+
+			var requestCPU int64
+			var requestMem int64
+			var limitCPU int64
+			var limitMem int64
+
 			for _, container := range deployment.Spec.Template.Spec.Containers {
-				item := make([]string, 7)
-
-				item[0] = namespace.Name
-				item[1] = deployment.Name
-				item[2] = container.Name
-
-				requestCPU := container.Resources.Requests.Cpu().Value()
-				requestMem := container.Resources.Requests.Memory().Value()
-				limitCPU := container.Resources.Limits.Cpu().Value()
-				limitMem := container.Resources.Limits.Memory().Value()
-
-				item[3] = strconv.FormatInt(requestCPU, 10)
-				item[4] = strconv.FormatInt(limitCPU, 10)
-				item[5] = strconv.FormatInt(requestMem/1024/1024, 10)
-				item[6] = strconv.FormatInt(limitMem/1024/1024, 10)
-
-				table = append(table, item)
+				requestCPU += container.Resources.Requests.Cpu().Value()
+				requestMem += container.Resources.Requests.Memory().Value()
+				limitCPU += container.Resources.Limits.Cpu().Value()
+				limitMem += container.Resources.Limits.Memory().Value()
 			}
+			item = append(item, strconv.FormatInt(requestCPU, 10))
+			item = append(item, strconv.FormatInt(limitCPU, 10))
+			item = append(item, strconv.FormatInt(requestMem/1024/1024, 10))
+			item = append(item, strconv.FormatInt(limitMem/1024/1024, 10))
+			item = append(item, fmt.Sprintf("%d", *(deployment.Spec.Replicas)))
+			table = append(table, item)
 		}
 	}
 
 	tw := tablewriter.NewWriter(os.Stdout)
-	tw.SetHeader([]string{"namespace", "deployment", "container", "CPU\nREQUEST", "CPU\nLIMIT", "Mem\nREQUEST", "Mem\nLIMIT"})
-
+	tw.SetHeader([]string{"namespace", "deployment", "CPU\nREQUEST", "CPU\nLIMIT", "Mem\nREQUEST", "Mem\nLIMIT", "replica"})
 	tw.AppendBulk(table)
-
 	tw.Render()
 }
