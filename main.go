@@ -48,9 +48,9 @@ func main() {
 			var limitMem int64
 
 			for _, container := range deployment.Spec.Template.Spec.Containers {
-				requestCPU += container.Resources.Requests.Cpu().Value()
+				requestCPU += container.Resources.Requests.Cpu().MilliValue()
 				requestMem += container.Resources.Requests.Memory().Value()
-				limitCPU += container.Resources.Limits.Cpu().Value()
+				limitCPU += container.Resources.Limits.Cpu().MilliValue()
 				limitMem += container.Resources.Limits.Memory().Value()
 			}
 			item = append(item, strconv.FormatInt(requestCPU, 10))
